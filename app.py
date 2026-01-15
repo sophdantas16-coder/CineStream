@@ -5,7 +5,7 @@ import random
 import re
 from deep_translator import GoogleTranslator
 
-# Configuração inicial para evitar erros de renderização
+# Configuração para evitar erros de renderização
 st.set_page_config(page_title="CineStream", layout="wide")
 
 API_KEY = "8265bd1679663a7ea12ac168da84d2e8"
@@ -71,6 +71,20 @@ def exibir_recomendacao(item, tipo):
                     if actor.get('profile_path'):
                         st.image(f"https://image.tmdb.org/t/p/w185{actor['profile_path']}", use_container_width=True)
                     st.caption(actor['name'])
+
+        # --- SEÇÃO DE TRAILER  ---
+        st.subheader("🎥 Trailer Oficial")
+        v_res = requests.get(f"https://api.themoviedb.org/3/{tipo}/{item['id']}/videos?api_key={API_KEY}").json()
+        videos = v_res.get('results', [])
+        # Busca por um vídeo que seja 'Trailer' e do 'YouTube'
+        trailer = next((v for v in videos if v['type'] == 'Trailer' and v['site'] == 'YouTube'), None)
+
+        if trailer:
+            st.video(f"https://www.youtube.com/watch?v={trailer['key']}")
+        else:
+            st.warning("Trailer não encontrado.")
+        # ----------------------------------------
+
     with c2:
         if item.get('poster_path'):
             st.image(f"https://image.tmdb.org/t/p/w500{item['poster_path']}", use_container_width=True)
@@ -108,7 +122,7 @@ if df is not None:
         params = {
             "api_key": API_KEY, "language": "pt-BR", "sort_by": "popularity.desc",
             "primary_release_date.gte" if endpoint == "movie" else "first_air_date.gte": f"{anos[0]}-01-01",
-            "primary_release_date.lte" if endpoint == "movie" else "first_air_date.lte": f"{anos[1]}-12-31",
+            "primary_release_date.lte" if endpoint == "movie" else "primary_release_date.lte": f"{anos[1]}-12-31",
             "without_genres": "16", "with_original_language": "en"
         }
 
